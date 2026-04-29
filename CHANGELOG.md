@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.5] - 2026-04-24
+
+### Added
+- `display:` option on `ThinkingConfigAdaptive` and `ThinkingConfigEnabled`, forwarded to the CLI as `--thinking-display <summarized|omitted>`. Opus 4.7 defaults thinking display to `"omitted"` (empty `thinking` field, signature only), so pass `ThinkingConfigAdaptive.new(display: "summarized")` to receive plaintext summarized thinking text. Invalid values raise `ArgumentError` at construction. See [adaptive thinking docs](https://docs.claude.com/en/docs/build-with-claude/adaptive-thinking).
+
+### Internal
+- Extracted private `writeln`/`write` helpers in `Client` and `Query` to consolidate the `@transport.write(json + "\n")` pattern across five call sites. Pure refactor; same bytes on the wire.
+
+## [0.16.4] - 2026-04-23
+
+### Fixed
+- `Client#receive_response` no longer hangs in interactive Client mode. The 0.16.1 flag-based fix relied on the loop draining via the transport's `:end` sentinel, which only arrives when the CLI subprocess exits — true for one-shot `query()` but never for a `Client` whose CLI stays alive between turns. `receive_response` now drives `QueryHandler#receive_messages` directly so its `break` runs on the same fiber as the underlying `Async::Queue#dequeue` loop and unwinds it. The 0.16.1 regression spec passed only because its stub iterated a finite array; replaced with a real `Async::Queue` driven from a sibling task so a hang now fails the test.
+
+### Internal
+- `FiberBoundary` doc-comment now warns that `break`/`return`/`next` cannot cross the thread hop, so SDK-internal loops yielding user callbacks must keep loop control on the outer side of the boundary.
+
 ## [0.16.3] - 2026-04-23
 
 ### Changed
