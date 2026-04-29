@@ -60,12 +60,10 @@ module ClaudeAgentSDK
   # Base class for all types.
   class Type
     def self.wrap(object)
-      case object
-      when self
-        object
-      else
-        new(object)
-      end
+      return object if object.is_a?(self)
+      return nil if object.nil?
+
+      new(object)
     end
 
     def self.from_hash(hash)
@@ -1505,6 +1503,16 @@ module ClaudeAgentSDK
     end
 
     private
+
+    # Strict key validation: unlike other Type subclasses (which silently drop
+    # unknown keys for forward-compat with newer CLI output), ClaudeAgentOptions
+    # is a developer-facing config object — typos should fail loudly.
+    def assign_attribute(name, value)
+      setter = :"#{normalize_name(name)}="
+      raise ArgumentError, "unknown ClaudeAgentOptions option: #{name.inspect}" unless respond_to?(setter)
+
+      public_send(setter, value)
+    end
 
     # Merge caller-provided attributes with configured defaults.
     # Only keys the caller explicitly passed are treated as overrides;
