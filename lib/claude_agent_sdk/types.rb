@@ -138,13 +138,13 @@ module ClaudeAgentSDK
 
     FALSE_VALUES = [
       false, 0,
-      "0", :"0",
+      "0", :'0',
       "f", :f,
       "F", :F,
-      "false", :false,
+      "false", :false, # rubocop:disable Lint/BooleanSymbol
       "FALSE", :FALSE,
       "off", :off,
-      "OFF", :OFF,
+      "OFF", :OFF
     ].to_set.freeze
 
     private_constant :FALSE_VALUES
@@ -1175,7 +1175,11 @@ module ClaudeAgentSDK
     end
 
     def tools=(value)
-      @tools = value.is_a?(Array) ? value.map { |t| t.is_a?(Hash) ? McpToolInfo.new(t) : t } : value
+      @tools = if value.is_a?(Array)
+                 value.map { |t| t.is_a?(Hash) ? McpToolInfo.new(t) : t }
+               else
+                 value
+               end
     end
 
     def config=(value)
@@ -1207,7 +1211,11 @@ module ClaudeAgentSDK
     attr_reader :mcp_servers
 
     def mcp_servers=(value)
-      @mcp_servers = value.is_a?(Array) ? value.map { |s| s.is_a?(Hash) ? McpServerStatus.new(s) : s } : value
+      @mcp_servers = if value.is_a?(Array)
+                       value.map { |s| s.is_a?(Hash) ? McpServerStatus.new(s) : s }
+                     else
+                       value
+                     end
     end
 
     # Backwards-compatible parse; returns nil for nil input.
@@ -1420,15 +1428,17 @@ module ClaudeAgentSDK
   # Claude Agent Options for configuring queries
   class ClaudeAgentOptions < Type
     attr_accessor :allowed_tools, :system_prompt, :mcp_servers, :permission_mode,
-                  :continue_conversation, :resume, :session_id, :max_turns, :disallowed_tools,
+                  :resume, :session_id, :max_turns, :disallowed_tools,
                   :model, :permission_prompt_tool_name, :cwd, :cli_path, :settings,
                   :add_dirs, :env, :extra_args, :max_buffer_size, :stderr,
-                  :can_use_tool, :hooks, :user, :include_partial_messages,
-                  :fork_session, :agents, :setting_sources,
+                  :can_use_tool, :hooks, :user,
+                  :agents, :setting_sources,
                   :output_format, :max_budget_usd, :max_thinking_tokens,
                   :fallback_model, :plugins, :debug_stderr,
-                  :betas, :tools, :sandbox, :enable_file_checkpointing, :append_allowed_tools,
-                  :thinking, :effort, :bare, :observers, :task_budget
+                  :betas, :tools, :sandbox, :append_allowed_tools,
+                  :thinking, :effort, :observers, :task_budget
+    attr_reader :bare, :fork_session, :enable_file_checkpointing,
+                :include_partial_messages, :continue_conversation
 
     def initialize(attributes = {})
       self.fork_session = false
